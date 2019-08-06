@@ -20,6 +20,7 @@
  *		redirect --port=$port server1 [server2] [server3] [...]
  *		--port:		UDP Port for SIP
  *		server1:	Real SIP Server
+ * license: GPL
  *
  * @file redirect.c
  * @author ¿Ó–€∑Â li xiongfeng
