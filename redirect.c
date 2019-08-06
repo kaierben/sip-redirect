@@ -315,7 +315,7 @@ int main(int argc, char* argv[])
 	running = 1;
 	signal(SIGINT, signal_abort);
 	signal(SIGTERM, signal_abort);
-	time(&now);
+	time(&last);
 	while (running)
 	{
 		char rx_buf[4000];
@@ -331,11 +331,11 @@ int main(int argc, char* argv[])
 		if (select(fd + 1, &fs, NULL, NULL, &tv) <= 0)
 		{
 			// 空闲时检查， 如果有消息，则不检查。
-			time(&last);
+			time(&now);
 			if (last != now)
 			{
-				scan_location((int)(last-now));
-				now = last;
+				scan_location((int)(now - last));
+				last = now;
 			}
 			continue;
 		}
