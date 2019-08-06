@@ -11,6 +11,16 @@
  *  如果收到REGISTER请求，则判断上次的相同号码重定向的地址，有则转移到前次地址，否则保存地址信息
  *	如果收到其它请求，先查找地址信息表，如果有则按前次地址重定向，否则随机一个地址重定向
  *
+ *  内部使用了一个哈希表，表中每个节点是一个单向链表。
+ *	每个节点又有r_next, r_prev建立双向链表。双向链表和哈希表并行存在。
+ *
+ * compile:
+ *		gcc -O3 -Wall -o redirect redirect.c
+ * usage:
+ *		redirect --port=$port server1 [server2] [server3] [...]
+ *		--port:		UDP Port for SIP
+ *		server1:	Real SIP Server
+ *
  * @file redirect.c
  * @author 李雄峰 li xiongfeng
  * @email lxf_programmer@163.com
@@ -42,9 +52,9 @@ struct hash_table
 {
 	// 哈希表
 	unsigned int capacity; // 容量大小，作为模数。
-	unsigned int size; // 实际大小。
-	struct hash_node** tables; // 数组，长度为capacity, 当前版本长度不可变，节点是一个单链表。
-	struct hash_node* r_link;  // 双向链表，保存所有节点。
+	unsigned int size; // fact size, 实际大小。
+	struct hash_node** tables; // array, 数组，长度为capacity, 当前版本长度不可变，节点是一个单链表。
+	struct hash_node* r_link;  // double link, 双向链表，保存所有节点。
 };
 
 struct sip_message
@@ -106,7 +116,6 @@ static int sip_parse(struct sip_message*  msg, char* buf)
 		else if (!strcasecmp(buf, "To") || !strcmp(buf,"t")) msg->to = val;
 		else if (!strcasecmp(buf, "CSeq")) msg->cseq = val;
 		else if (!strcasecmp(buf, "Via") || !strcmp(buf,"v")) if (via<16) msg->via[via++] = val;
-
 	}
 	if (NULL == msg->callid || NULL == msg->from || 
 		NULL == msg->to || NULL == msg->callid || 0 == via)
